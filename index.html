@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script src="jquery-3.7.1.min.js"></script>
+	<title>Controles Beaglebone 161</title>
+</head>
+
+<body>
+	<div>
+		<label for="led3">LED 3</label>
+		<input type="checkbox" name="led3" />
+	</div>
+
+	<div>
+		<label for="led2">LED 2</label>
+		<input type="checkbox" name="led2" />
+	</div>
+
+	<div>
+		<label for="ledR">LED Red</label>
+		<input type="checkbox" name="ledR" />
+	</div>
+
+	<div>
+		<label for="ledG">LED Green</label>
+		<input type="checkbox" name="ledG" />
+	</div>
+
+	<div>
+		<label for="ledB">LED Blue</label>
+		<input type="checkbox" name="ledB" />
+	</div>
+
+	<div>
+		Valeur du potentiomètre :
+		<span id="valeur_potentiometre">N/A</span>
+	</div>
+
+	<div>
+		État du bouton :
+		<span id="etat_bouton">N/A</span>
+	</div>
+</body>
+
+<script>
+	$(document).ready(function() {
+		// Lecture des états de base des LEDs
+		var led_urls = [
+			"get_led3_state.php",
+			"get_led2_state.php",
+			"get_ledR_state.php",
+			"get_ledG_state.php",
+			"get_ledB_state.php"
+		];
+		led_urls.forEach(function(url) {
+			$.ajax({
+				url: url,
+				method: 'GET',
+				success: function(data) {
+					var led = url.split("_")[1];
+					$('input[name="' + led + '"]').prop("checked", data == 1);
+				}
+			});
+		});
+
+		// Écritures des états des LEDs
+		$('input[type="checkbox"]').click(function() {
+			var led = $(this).attr("name");
+			var state = $(this).prop("checked") ? 1 : 0;
+
+			var file = "set_" + led + "_state.php";
+
+			$.ajax({
+				url: file,
+				method: 'POST',
+				data: {
+					state: state
+				},
+			});
+		});
+
+		// Lecture de l'état du potentiomètre
+		setInterval(function() {
+			$.ajax({
+				url: 'get_potentiometer_value.php',
+				method: 'GET',
+				success: function(data) {
+					$('#valeur_potentiometre').html(data);
+				}
+			});
+		}, 50);
+
+		// Lecture de l'état du bouton
+		setInterval(function() {
+			$.ajax({
+				url: 'get_button_state.php',
+				method: 'GET',
+				success: function(data) {
+					var etat = data == 1 ? "Relâché" : "Appuyé";
+					$('#etat_bouton').html(etat);
+				}
+			});
+		}, 50);
+	});
+</script>
+</html>
